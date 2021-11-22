@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	_ "embed"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -12,21 +13,11 @@ import (
 	"unicode"
 )
 
+//go:embed glyphnames.json
+var glyphnamesData []byte
+
 func main() {
-	var classesFilename string
-	var glyphnamesFilename string
-	var rangesFilename string
-
-	flag.StringVar(&classesFilename, "classes", "", "file for classes")
-	flag.StringVar(&glyphnamesFilename, "glyphnames", "", "file for glyphnames")
-	flag.StringVar(&rangesFilename, "ranges", "", "file for ranges")
-
 	flag.Parse()
-
-	glyphnamesData, err := os.ReadFile(glyphnamesFilename)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	glyphs := map[string]Glyph{}
 	if err := json.Unmarshal(glyphnamesData, &glyphs); err != nil {
@@ -72,7 +63,7 @@ type Glyph struct {
 	Description string
 }
 
-func CanonicalGlyphName(name string)  string {
+func CanonicalGlyphName(name string) string {
 	if unicode.IsDigit(rune(name[0])) {
 		switch name[0] {
 		case '0':

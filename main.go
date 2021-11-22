@@ -94,12 +94,28 @@ func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 
 	face := ui.Face
 	size := fixed.I(64)
-	clip := face.Shape(size, text.Layout{
-		Text:     string(smufl.NoteWhole) + string(smufl.NoteWhole),
-		Advances: []fixed.Int26_6{fixed.I(64), fixed.I(0)},
-	})
-	paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
-
+	{
+		clip := face.Shape(size, text.Layout{
+			Text:     string(smufl.Staff5Lines),
+			Advances: []fixed.Int26_6{fixed.I(0)},
+		})
+		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+	}
+	{
+		clip := face.Shape(size, text.Layout{
+			Text:     string(smufl.NoteWhole),
+			Advances: []fixed.Int26_6{fixed.I(0)},
+		})
+		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+	}
+	{
+		op.Offset(f32.Pt(0, -64*1/4)).Add(gtx.Ops)
+		clip := face.Shape(size, text.Layout{
+			Text:     string(smufl.GClef),
+			Advances: []fixed.Int26_6{fixed.I(0)},
+		})
+		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+	}
 	return layout.Dimensions{
 		Size: gtx.Constraints.Max,
 	}
