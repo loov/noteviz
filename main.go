@@ -9,7 +9,6 @@ import (
 	"gioui.org/app"
 	"gioui.org/f32"
 	"gioui.org/font/gofont"
-	"gioui.org/font/opentype"
 	"gioui.org/io/key"
 	"gioui.org/io/system"
 	"gioui.org/layout"
@@ -20,6 +19,7 @@ import (
 	"gioui.org/widget/material"
 	"golang.org/x/image/math/fixed"
 
+	"github.com/loov/noteviz/internal/font/bravura"
 	"github.com/loov/noteviz/internal/smufl"
 )
 
@@ -49,18 +49,13 @@ var defaultMargin = unit.Dp(10)
 type UI struct {
 	Theme *material.Theme
 
-	Face *opentype.Font
+	Font *smufl.Font
 }
 
 func NewUI() *UI {
 	ui := &UI{}
 	ui.Theme = material.NewTheme(gofont.Collection())
-
-	face, err := opentype.Parse(bravuraFontData)
-	if err != nil {
-		panic(err)
-	}
-	ui.Face = face
+	ui.Font = bravura.Font()
 
 	return ui
 }
@@ -92,7 +87,7 @@ func (ui *UI) Run(w *app.Window) error {
 func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 	op.Offset(f32.Pt(256, 256)).Add(gtx.Ops)
 
-	face := ui.Face
+	face := ui.Font.Face
 	size := fixed.I(64)
 	{
 		clip := face.Shape(size, text.Layout{
