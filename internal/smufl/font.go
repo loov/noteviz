@@ -166,6 +166,9 @@ type EngravingDefaults struct {
 	HBarThickness Decimal `json:"hBarThickness"`
 }
 
+// TODO: figure out whether this is the best way to represent anchors,
+// since most of the values are unset for most glyphs.
+
 type GlyphAnchors struct {
 	// The exact position at which the bottom right-hand (south-east) corner
 	// of an angled upward-pointing stem connecting the right-hand side of a
