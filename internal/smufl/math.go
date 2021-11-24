@@ -17,7 +17,8 @@ func ParseFloat(v string) (Decimal, error) {
 	if err != nil {
 		return 0, fmt.Errorf("failed to parse %q: %w", v, err)
 	}
-	return Decimal(f*1e6)<<1 | 1, nil
+	// the Decimal values in json are reperesented as staff spaces
+	return Decimal(f*1e6/4)<<1 | 1, nil
 }
 
 func (v Decimal) IsUnset() bool { return v == 0 }
@@ -33,7 +34,7 @@ func (v *Decimal) UnmarshalJSON(xs []byte) error {
 
 func (v Decimal) Px(ppem fixed.Int26_6) fixed.Int26_6 {
 	// TODO: verify correctness and implement without overflow.
-	return fixed.Int26_6(Decimal(ppem) * (v >> 1) / (4*1e6)) // no clue why it needs /4
+	return fixed.Int26_6(Decimal(ppem) * (v >> 1) / 1e6)
 }
 
 func (v Decimal) Float64() float64 { return float64(v>>1) / 1e6 }
