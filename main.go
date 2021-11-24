@@ -112,7 +112,7 @@ func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
 		}
 		{
-			op.Offset(f32.Pt(0, -64*1/4)).Add(gtx.Ops)
+			op.Offset(f32.Pt(0, float32((-size/4).Round()))).Add(gtx.Ops)
 
 			advance := ui.Font.GlyphAdvanceWidths[smufl.GClef].Px(size)
 			clip := face.Shape(size, repeated(5, smufl.GClef, advance))
