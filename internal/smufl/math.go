@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+
+	"golang.org/x/image/math/fixed"
 )
 
 // Decimal is a decimal represented as v * 1e6, with the lowest
@@ -25,8 +27,13 @@ func (v *Decimal) UnmarshalJSON(xs []byte) error {
 	if err != nil {
 		return err
 	}
-	*v = Decimal(d)
+	*v = d
 	return nil
+}
+
+func (v Decimal) Px(ppem fixed.Int26_6) fixed.Int26_6 {
+	// TODO: verify correctness and implement without overflow.
+	return fixed.Int26_6(Decimal(ppem) * (v >> 1) / (4*1e6)) // no clue why it needs /4
 }
 
 func (v Decimal) Float64() float64 { return float64(v>>1) / 1e6 }

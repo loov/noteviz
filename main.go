@@ -2,10 +2,7 @@ package main
 
 import (
 	_ "embed"
-	"image/color"
-	"log"
-	"os"
-
+	"fmt"
 	"gioui.org/app"
 	"gioui.org/f32"
 	"gioui.org/font/gofont"
@@ -18,6 +15,8 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"golang.org/x/image/math/fixed"
+	"image/color"
+	"os"
 
 	"github.com/loov/noteviz/internal/font/bravura"
 	"github.com/loov/noteviz/internal/smufl"
@@ -35,7 +34,7 @@ func main() {
 			app.Size(unit.Dp(720), unit.Dp(720)),
 		)
 		if err := ui.Run(w); err != nil {
-			log.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
 		os.Exit(0)
@@ -87,30 +86,40 @@ func (ui *UI) Run(w *app.Window) error {
 func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 	op.Offset(f32.Pt(256, 256)).Add(gtx.Ops)
 
-	face := ui.Font.Face
-	size := fixed.I(64)
-	{
-		clip := face.Shape(size, text.Layout{
-			Text:     string(smufl.Staff5Lines),
-			Advances: []fixed.Int26_6{fixed.I(0)},
-		})
-		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+	repeated := func(count int, r rune, advance fixed.Int26_6) text.Layout {
+		var lay text.Layout
+		for i := 0; i < count; i++ {
+			lay.Text += string(r)
+			lay.Advances = append(lay.Advances, advance)
+		}
+		return lay
 	}
-	{
-		clip := face.Shape(size, text.Layout{
-			Text:     string(smufl.NoteWhole),
-			Advances: []fixed.Int26_6{fixed.I(0)},
-		})
-		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+
+	size := fixed.I(16)
+	for k := 0; k < 3; k++ {
+		op.Offset(f32.Pt(0, 256)).Add(gtx.Ops)
+
+		size *= 2
+		face := ui.Font.Face
+		{
+			advance := ui.Font.GlyphAdvanceWidths[smufl.Staff5Lines].Px(size)
+			clip := face.Shape(size, repeated(5, smufl.Staff5Lines, advance))
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+		}
+		{
+			advance := ui.Font.GlyphAdvanceWidths[smufl.NoteWhole].Px(size)
+			clip := face.Shape(size, repeated(5, smufl.NoteWhole, advance))
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+		}
+		{
+			op.Offset(f32.Pt(0, -64*1/4)).Add(gtx.Ops)
+
+			advance := ui.Font.GlyphAdvanceWidths[smufl.GClef].Px(size)
+			clip := face.Shape(size, repeated(5, smufl.GClef, advance))
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+		}
 	}
-	{
-		op.Offset(f32.Pt(0, -64*1/4)).Add(gtx.Ops)
-		clip := face.Shape(size, text.Layout{
-			Text:     string(smufl.GClef),
-			Advances: []fixed.Int26_6{fixed.I(0)},
-		})
-		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
-	}
+
 	return layout.Dimensions{
 		Size: gtx.Constraints.Max,
 	}
