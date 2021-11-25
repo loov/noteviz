@@ -162,7 +162,7 @@ func (staff *Staff) Layout(gtx layout.Context, font *smufl.Font) layout.Dimensio
 			Text:     string(smufl.LegerLine),
 			Advances: []fixed.Int26_6{0},
 		})
-		x := fixed.I(0)
+		x := staff.One
 		for _, note := range staff.Notes {
 			y := staff.One.Mul(-fixed.I(note) / 2)
 			stack := op.Offset(f32.Pt(float32(x.Round()), float32(y.Round()))).Push(gtx.Ops)
