@@ -101,6 +101,7 @@ func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 		op.Offset(f32.Pt(0, 256)).Add(gtx.Ops)
 
 		size *= 2
+		staffSpace := size / 4
 		face := ui.Font.Face
 		{
 			advance := ui.Font.GlyphAdvanceWidths[smufl.Staff5Lines].Px(size)
@@ -109,7 +110,7 @@ func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 		}
 		{
 			advance := ui.Font.GlyphAdvanceWidths[smufl.NoteheadBlack].Px(size)
-			clip := face.Shape(size, repeated(5, smufl.NoteheadBlack, advance))
+			clip := face.Shape(size, repeated(5, smufl.NoteheadBlack, advance+staffSpace*12/10))
 			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
 		}
 		{
