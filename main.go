@@ -3,6 +3,9 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"image/color"
+	"os"
+
 	"gioui.org/app"
 	"gioui.org/f32"
 	"gioui.org/font/gofont"
@@ -15,8 +18,6 @@ import (
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"golang.org/x/image/math/fixed"
-	"image/color"
-	"os"
 
 	"github.com/loov/noteviz/internal/font/bravura"
 	"github.com/loov/noteviz/internal/smufl"
@@ -107,12 +108,12 @@ func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
 			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
 		}
 		{
-			advance := ui.Font.GlyphAdvanceWidths[smufl.NoteWhole].Px(size)
-			clip := face.Shape(size, repeated(5, smufl.NoteWhole, advance))
+			advance := ui.Font.GlyphAdvanceWidths[smufl.NoteheadBlack].Px(size)
+			clip := face.Shape(size, repeated(5, smufl.NoteheadBlack, advance))
 			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
 		}
 		{
-			op.Offset(f32.Pt(0, float32((-size/4).Round()))).Add(gtx.Ops)
+			op.Offset(f32.Pt(0, float32((-size / 4).Round()))).Add(gtx.Ops)
 
 			advance := ui.Font.GlyphAdvanceWidths[smufl.GClef].Px(size)
 			clip := face.Shape(size, repeated(5, smufl.GClef, advance))
