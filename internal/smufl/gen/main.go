@@ -67,25 +67,25 @@ func CanonicalGlyphName(name string) string {
 	if unicode.IsDigit(rune(name[0])) {
 		switch name[0] {
 		case '0':
-			name = "Zero" + name[1:]
+			name = "Zero" + strings.Title(name[1:])
 		case '1':
-			name = "One" + name[1:]
+			name = "One" + strings.Title(name[1:])
 		case '2':
-			name = "Two" + name[1:]
+			name = "Two" + strings.Title(name[1:])
 		case '3':
-			name = "Three" + name[1:]
+			name = "Three" + strings.Title(name[1:])
 		case '4':
-			name = "Four" + name[1:]
+			name = "Four" + strings.Title(name[1:])
 		case '5':
-			name = "Five" + name[1:]
+			name = "Five" + strings.Title(name[1:])
 		case '6':
-			name = "Six" + name[1:]
+			name = "Six" + strings.Title(name[1:])
 		case '7':
-			name = "Seven" + name[1:]
+			name = "Seven" + strings.Title(name[1:])
 		case '8':
-			name = "Eight" + name[1:]
+			name = "Eight" + strings.Title(name[1:])
 		case '9':
-			name = "Nine" + name[1:]
+			name = "Nine" + strings.Title(name[1:])
 		}
 	}
 	return strings.Title(name)

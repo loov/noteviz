@@ -2,9 +2,9 @@ package smufl
 
 const (
 	// 4-string tab clef
-	FourstringTabClef = '\uE06E'
+	FourStringTabClef = '\uE06E'
 	// 6-string tab clef
-	SixstringTabClef = '\uE06D'
+	SixStringTabClef = '\uE06D'
 	// 11 large diesis down, 3° down [46 EDO]
 	AccSagittal11LargeDiesisDown = '\uE30D'
 	// 11 large diesis up, (11L), (sharp less 11M), 3° up [46 EDO]
@@ -5868,8 +5868,8 @@ const (
 )
 
 var nameToCodepoint = map[string]rune{
-	"4stringTabClef": FourstringTabClef,
-	"6stringTabClef": SixstringTabClef,
+	"4stringTabClef": FourStringTabClef,
+	"6stringTabClef": SixStringTabClef,
 	"accSagittal11LargeDiesisDown": AccSagittal11LargeDiesisDown,
 	"accSagittal11LargeDiesisUp": AccSagittal11LargeDiesisUp,
 	"accSagittal11MediumDiesisDown": AccSagittal11MediumDiesisDown,
