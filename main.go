@@ -3,6 +3,7 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"image"
 	"image/color"
 	"os"
 
@@ -13,6 +14,7 @@ import (
 	"gioui.org/io/system"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/text"
 	"gioui.org/unit"
@@ -22,9 +24,6 @@ import (
 	"github.com/loov/noteviz/internal/font/bravura"
 	"github.com/loov/noteviz/internal/smufl"
 )
-
-//go:embed internal/font/bravura/otf/Bravura.otf
-var bravuraFontData []byte
 
 func main() {
 	ui := NewUI()
@@ -84,45 +83,100 @@ func (ui *UI) Run(w *app.Window) error {
 	}
 }
 
-func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
-	op.Offset(f32.Pt(256, 256)).Add(gtx.Ops)
+/*
+var input = `
+# b3bb bb_b_ b_ b_ b_
+2.34432.2.2.2.
 
-	repeated := func(count int, r rune, advance fixed.Int26_6) text.Layout {
-		var lay text.Layout
-		for i := 0; i < count; i++ {
-			lay.Text += string(r)
-			lay.Advances = append(lay.Advances, advance)
+# x x e4eggb dc+baf dg
+`
+*/
+
+func (ui *UI) Layout(gtx layout.Context) layout.Dimensions {
+	staves := []Staff{
+		{
+			One:          fixed.I(16),
+			SpaceAboveSP: fixed.I(4),
+			SpaceBelowSP: fixed.I(4),
+
+			Notes: []int{-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+		},
+		{
+			One:          fixed.I(48),
+			SpaceAboveSP: fixed.I(4),
+			SpaceBelowSP: fixed.I(4),
+
+			Notes: []int{-3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14},
+		},
+	}
+	return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		list := layout.List{
+			Axis: layout.Vertical,
 		}
-		return lay
+		return list.Layout(gtx, len(staves), func(gtx layout.Context, i int) layout.Dimensions {
+			return staves[i].Layout(gtx, ui.Font)
+		})
+	})
+}
+
+type Staff struct {
+	One fixed.Int26_6 // staff space
+
+	SpaceAboveSP fixed.Int26_6
+	SpaceBelowSP fixed.Int26_6
+
+	Notes []int
+}
+
+func (staff *Staff) Layout(gtx layout.Context, font *smufl.Font) layout.Dimensions {
+	width := float32(gtx.Constraints.Max.X)
+
+	lineHeight := staff.One * 4
+	firstStaffLine := staff.SpaceAboveSP.Mul(staff.One) + 4*staff.One
+	defer op.Offset(f32.Pt(0, float32(firstStaffLine.Round()))).Push(gtx.Ops).Pop()
+
+	{ // draw staff lines
+		staffLineThickness := font.EngravingDefaults.StaffLineThickness.Px(lineHeight)
+		halfStaffLineThicknessPx := float32((staffLineThickness / 2).Round())
+
+		var builder clip.Path
+		builder.Begin(gtx.Ops)
+		for i := 0; i < 5; i++ {
+			y := float32(staff.One.Mul(fixed.I(i)).Round())
+			builder.MoveTo(f32.Pt(0, -y-halfStaffLineThicknessPx-0.5))
+			builder.LineTo(f32.Pt(width, -y-halfStaffLineThicknessPx-0.5))
+			builder.LineTo(f32.Pt(width, -y+halfStaffLineThicknessPx+0.5))
+			builder.LineTo(f32.Pt(0, -y+halfStaffLineThicknessPx+0.5))
+			builder.Close()
+		}
+		paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip.Outline{Path: builder.End()}.Op())
 	}
 
-	size := fixed.I(16)
-	for k := 0; k < 3; k++ {
-		op.Offset(f32.Pt(0, 256)).Add(gtx.Ops)
-
-		size *= 2
-		staffSpace := size / 4
-		face := ui.Font.Face
-		{
-			advance := ui.Font.GlyphAdvanceWidths[smufl.Staff5Lines].Px(size)
-			clip := face.Shape(size, repeated(5, smufl.Staff5Lines, advance))
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
-		}
-		{
-			advance := ui.Font.GlyphAdvanceWidths[smufl.NoteheadBlack].Px(size)
-			clip := face.Shape(size, repeated(5, smufl.NoteheadBlack, advance+staffSpace*12/10))
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
-		}
-		{
-			op.Offset(f32.Pt(0, float32((-size / 4).Round()))).Add(gtx.Ops)
-
-			advance := ui.Font.GlyphAdvanceWidths[smufl.GClef].Px(size)
-			clip := face.Shape(size, repeated(5, smufl.GClef, advance))
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip)
+	{
+		advance := font.GlyphAdvanceWidths[smufl.NoteheadBlack].Px(lineHeight) + staff.One*12/10
+		noteheadClip := font.Face.Shape(lineHeight, text.Layout{
+			Text:     string(smufl.NoteheadBlack),
+			Advances: []fixed.Int26_6{advance},
+		})
+		ledgerLineClip := font.Face.Shape(lineHeight, text.Layout{
+			Text:     string(smufl.LegerLine),
+			Advances: []fixed.Int26_6{0},
+		})
+		x := fixed.I(0)
+		for _, note := range staff.Notes {
+			y := staff.One.Mul(-fixed.I(note) / 2)
+			stack := op.Offset(f32.Pt(float32(x.Round()), float32(y.Round()))).Push(gtx.Ops)
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, noteheadClip)
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, ledgerLineClip)
+			x += advance
+			stack.Pop()
 		}
 	}
 
 	return layout.Dimensions{
-		Size: gtx.Constraints.Max,
+		Size: image.Point{
+			X: gtx.Constraints.Max.X,
+			Y: (firstStaffLine + staff.SpaceBelowSP.Mul(staff.One)).Round(),
+		},
 	}
 }
