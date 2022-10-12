@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"strings"
 
 	"gioui.org/app"
 	"gioui.org/f32"
@@ -16,7 +17,6 @@ import (
 	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
-	"gioui.org/text"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
 	"golang.org/x/image/math/fixed"
@@ -133,7 +133,7 @@ func (staff *Staff) Layout(gtx layout.Context, font *smufl.Font) layout.Dimensio
 
 	lineHeight := staff.One * 4
 	firstStaffLine := staff.SpaceAboveSP.Mul(staff.One) + 4*staff.One
-	defer op.Offset(f32.Pt(0, float32(firstStaffLine.Round()))).Push(gtx.Ops).Pop()
+	defer op.Offset(image.Pt(0, firstStaffLine.Round())).Push(gtx.Ops).Pop()
 
 	{ // draw staff lines
 		staffLineThickness := font.EngravingDefaults.StaffLineThickness.Px(lineHeight)
@@ -154,20 +154,25 @@ func (staff *Staff) Layout(gtx layout.Context, font *smufl.Font) layout.Dimensio
 
 	{
 		advance := font.GlyphAdvanceWidths[smufl.NoteheadBlack].Px(lineHeight) + staff.One*12/10
-		noteheadClip := font.Face.Shape(lineHeight, text.Layout{
-			Text:     string(smufl.NoteheadBlack),
-			Advances: []fixed.Int26_6{advance},
-		})
-		ledgerLineClip := font.Face.Shape(lineHeight, text.Layout{
-			Text:     string(smufl.LegerLine),
-			Advances: []fixed.Int26_6{0},
-		})
+
+		noteheadText, err := font.Face.Layout(lineHeight, 100000, gtx.Locale, strings.NewReader(string(smufl.NoteheadBlack)))
+		if err != nil {
+			panic(err)
+		}
+		noteheadClip := font.Face.Shape(lineHeight, noteheadText[0].Layout)
+
+		legerLineText, err := font.Face.Layout(lineHeight, 100000, gtx.Locale, strings.NewReader(string(smufl.LegerLine)))
+		if err != nil {
+			panic(err)
+		}
+		legerLineClip := font.Face.Shape(lineHeight, legerLineText[0].Layout)
+
 		x := staff.One
 		for _, note := range staff.Notes {
 			y := staff.One.Mul(-fixed.I(note) / 2)
-			stack := op.Offset(f32.Pt(float32(x.Round()), float32(y.Round()))).Push(gtx.Ops)
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, noteheadClip)
-			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, ledgerLineClip)
+			stack := op.Offset(image.Pt(x.Round(), y.Round())).Push(gtx.Ops)
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip.Outline{Path: noteheadClip}.Op())
+			paint.FillShape(gtx.Ops, color.NRGBA{A: 0xFF}, clip.Outline{Path: legerLineClip}.Op())
 			x += advance
 			stack.Pop()
 		}
